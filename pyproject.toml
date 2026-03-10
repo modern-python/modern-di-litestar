@@ -29,7 +29,7 @@ dev = [
     "pytest-asyncio",
 ]
 lint = [
-    "mypy",
+    "ty",
     "ruff",
     "eof-fixer",
     "typing-extensions",
@@ -41,10 +41,6 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build]
 include = ["modern_di_litestar"]
-
-[tool.mypy]
-python_version = "3.10"
-strict = true
 
 [tool.ruff]
 fix = false
