@@ -1,13 +1,14 @@
 import contextlib
 import dataclasses
 import typing
+import warnings
 
 import litestar
 from litestar.config.app import AppConfig
 from litestar.di import Provide
 from litestar.params import Dependency
 from litestar.plugins import InitPlugin
-from modern_di import Container, providers
+from modern_di import Container, Group, providers
 from modern_di.scope import Scope
 from modern_di.scope import Scope as DIScope
 
@@ -33,15 +34,28 @@ async def _lifespan_manager(app_: litestar.Litestar) -> typing.AsyncIterator[Non
 
 
 class ModernDIPlugin(InitPlugin):
-    __slots__ = ("container",)
+    __slots__ = ("container", "groups")
 
-    def __init__(self, container: Container) -> None:
+    def __init__(self, container: Container, autowired_groups: list[type[Group]] | None = None) -> None:
         self.container = container
+        self.groups = autowired_groups or []
 
     def on_app_init(self, app_config: AppConfig) -> AppConfig:
         self.container.providers_registry.add_providers(litestar_request_provider, litestar_websocket_provider)
         app_config.state.di_container = self.container
         app_config.dependencies["di_container"] = Provide(build_di_container)
+        for group in self.groups:
+            name_by_provider_id = {
+                id(v): k for k, v in group.__dict__.items() if isinstance(v, providers.AbstractProvider)
+            }
+            for provider in group.get_providers():
+                name = name_by_provider_id[id(provider)]
+                if name in app_config.dependencies:
+                    warnings.warn(
+                        f"Duplicate dependency name '{name}' from group {group.__name__!r}; overwriting.",
+                        stacklevel=2,
+                    )
+                app_config.dependencies[name] = FromDI(provider)
         app_config.lifespan.append(_lifespan_manager)
         return app_config
 
