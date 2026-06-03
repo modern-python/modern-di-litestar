@@ -5,8 +5,8 @@ import warnings
 
 import litestar
 from litestar.config.app import AppConfig
-from litestar.di import Provide
-from litestar.params import Dependency
+from litestar.di import NamedDependency, Provide
+from litestar.params import SkipValidation
 from litestar.plugins import InitPlugin
 from modern_di import Container, Group, providers
 from modern_di.scope import Scope
@@ -82,9 +82,7 @@ async def build_di_container(
 class _Dependency(typing.Generic[T_co]):
     dependency: providers.AbstractProvider[T_co] | type[T_co]
 
-    async def __call__(
-        self, di_container: typing.Annotated[Container, Dependency(skip_validation=True)]
-    ) -> T_co | None:
+    async def __call__(self, di_container: NamedDependency[SkipValidation[Container]]) -> T_co | None:
         if isinstance(self.dependency, providers.AbstractProvider):
             return di_container.resolve_provider(self.dependency)
         return di_container.resolve(dependency_type=self.dependency)
