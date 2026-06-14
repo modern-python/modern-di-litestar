@@ -11,17 +11,17 @@
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![ty](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ty/main/assets/badge/v0.json)](https://github.com/astral-sh/ty)
 
-Integration of [Modern-DI](https://github.com/modern-python/modern-di) with [Litestar](https://litestar.dev).
+[Modern-DI](https://github.com/modern-python/modern-di) integration for [Litestar](https://litestar.dev).
 
 Usage example: [litestar-sqlalchemy-template](https://github.com/modern-python/litestar-sqlalchemy-template)
 
 ## Installation
 
 ```bash
-pip install modern-di-litestar
+uv add modern-di-litestar      # or: pip install modern-di-litestar
 ```
 
-## Quick start
+## Usage
 
 ### 1. Define providers
 
@@ -123,7 +123,7 @@ from modern_di_litestar import fetch_di_container
 container = fetch_di_container(app)
 ```
 
-## Public API
+## API
 
 | Symbol | Description |
 |---|---|
@@ -132,7 +132,7 @@ container = fetch_di_container(app)
 | `litestar_request_provider` | `ContextProvider` for the current `litestar.Request` |
 | `litestar_websocket_provider` | `ContextProvider` for the current `litestar.WebSocket` |
 | `fetch_di_container(app)` | Retrieves the root container from `app.state` |
-| `build_di_container` | Internal Litestar dependency — creates a scoped child container per request |
+| `build_di_container` | Litestar dependency (registered as `di_container`) — yields a scoped child container per request |
 
 ## 📦 [PyPI](https://pypi.org/project/modern-di-litestar)
 
