@@ -4,15 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Commands
 
-```bash
-just test                        # run tests with coverage
-just test tests/test_routes.py   # run a single test file
-just test -k test_name           # run a single test by name
-just lint                        # format + lint + type-check
-just lint-ci                     # lint without auto-fixing (CI mode)
-```
+`just --list` (or read the `Justfile`) is the source of truth for recipes; all run via `uv`. Do not call `pytest`/`ruff` directly — use `just`.
 
-All commands use `uv` under the hood. Do not call `pytest` or `ruff` directly — use `just`.
+- `just test [args]` runs pytest **without** coverage; extra args pass through (e.g. `just test tests/test_routes.py -k test_name`).
+- The 100% coverage gate lives in `just test-ci` (line) and `just test-branch` (branch) — not in `just test`.
+- `just lint` auto-fixes; `just lint-ci` is the non-fixing CI check.
 
 ## Architecture
 
