@@ -8,9 +8,7 @@ from litestar.config.app import AppConfig
 from litestar.di import NamedDependency, Provide
 from litestar.params import SkipValidation
 from litestar.plugins import InitPlugin
-from modern_di import Container, Group, providers
-from modern_di.scope import Scope
-from modern_di.scope import Scope as DIScope
+from modern_di import Container, Group, Scope, providers
 
 
 T_co = typing.TypeVar("T_co", covariant=True)
@@ -69,14 +67,13 @@ class ModernDIPlugin(InitPlugin):
 async def build_di_container(
     request: litestar.Request[typing.Any, typing.Any, typing.Any],
 ) -> typing.AsyncIterator[Container]:
-    context: dict[type[typing.Any], typing.Any] = {}
-    scope: DIScope | None
+    context: dict[type[typing.Any], typing.Any]
     if isinstance(request, litestar.WebSocket):
-        context[litestar.WebSocket] = request
-        scope = DIScope.SESSION
+        context = {litestar.WebSocket: request}
+        scope = litestar_websocket_provider.scope
     else:
-        context[litestar.Request] = request
-        scope = DIScope.REQUEST
+        context = {litestar.Request: request}
+        scope = litestar_request_provider.scope
     container = fetch_di_container(request.app).build_child_container(context=context, scope=scope)
     try:
         yield container
