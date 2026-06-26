@@ -15,6 +15,15 @@ lint-ci:
     uv run ruff format --check
     uv run ruff check --no-fix
     uv run ty check
+    uv run python planning/index.py --check
+
+# Print the planning change index (grouped by status) to stdout.
+index:
+    uv run python planning/index.py
+
+# Validate planning bundles + decisions (frontmatter, lanes); CI runs this via lint-ci.
+check-planning:
+    uv run python planning/index.py --check
 
 test *args:
     uv run --no-sync pytest {{ args }}
