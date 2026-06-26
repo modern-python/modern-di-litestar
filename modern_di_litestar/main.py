@@ -39,9 +39,11 @@ def _autowired_dependencies(groups: list[type[Group]], *, existing: typing.Itera
     for group in groups:
         for name, provider in group.get_named_providers().items():
             if name in seen:
+                # stacklevel=3: warn -> _autowired_dependencies -> on_app_init -> caller,
+                # matching the attribution of the original in-place warning in on_app_init.
                 warnings.warn(
                     f"Duplicate dependency name '{name}' from group {group.__name__!r}; overwriting.",
-                    stacklevel=2,
+                    stacklevel=3,
                 )
             seen.add(name)
             result[name] = FromDI(provider)
