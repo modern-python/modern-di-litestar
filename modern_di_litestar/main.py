@@ -17,6 +17,12 @@ T_co = typing.TypeVar("T_co", covariant=True)
 litestar_request_provider = providers.ContextProvider(scope=Scope.REQUEST, context_type=litestar.Request)
 litestar_websocket_provider = providers.ContextProvider(scope=Scope.SESSION, context_type=litestar.WebSocket)
 
+# The single source of the connection-kind mapping. Each provider pairs a connection
+# type (``context_type``) with the scope its child container opens at; the plugin
+# registers them and ``build_di_container`` dispatches off them. Add a connection
+# kind by adding its provider here — nothing else changes.
+_CONNECTION_PROVIDERS = (litestar_request_provider, litestar_websocket_provider)
+
 
 def fetch_di_container(app_: litestar.Litestar) -> Container:
     return typing.cast(Container, app_.state.di_container)
@@ -56,7 +62,7 @@ class ModernDIPlugin(InitPlugin):
         self.groups = autowired_groups or []
 
     def on_app_init(self, app_config: AppConfig) -> AppConfig:
-        self.container.providers_registry.add_providers(litestar_request_provider, litestar_websocket_provider)
+        self.container.providers_registry.add_providers(*_CONNECTION_PROVIDERS)
         app_config.state.di_container = self.container
         app_config.dependencies["di_container"] = Provide(build_di_container)
         app_config.dependencies.update(_autowired_dependencies(self.groups, existing=app_config.dependencies))
@@ -67,13 +73,13 @@ class ModernDIPlugin(InitPlugin):
 async def build_di_container(
     request: litestar.Request[typing.Any, typing.Any, typing.Any],
 ) -> typing.AsyncIterator[Container]:
-    context: dict[type[typing.Any], typing.Any]
-    if isinstance(request, litestar.WebSocket):
-        context = {litestar.WebSocket: request}
-        scope = litestar_websocket_provider.scope
-    else:
-        context = {litestar.Request: request}
-        scope = litestar_request_provider.scope
+    context: dict[type[typing.Any], typing.Any] = {}
+    scope = None
+    for provider in _CONNECTION_PROVIDERS:
+        if isinstance(request, provider.context_type):
+            context[provider.context_type] = request
+            scope = provider.scope
+            break
     container = fetch_di_container(request.app).build_child_container(context=context, scope=scope)
     try:
         yield container
