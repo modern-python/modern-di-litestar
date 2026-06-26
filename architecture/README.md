@@ -15,8 +15,8 @@ Capability files are added here as behavior is documented: a change that
 introduces or alters a capability creates or edits its file in the same PR that
 ships the code.
 
-_None yet — this directory was seeded when the planning convention was adopted;
-the first capability file lands with the next behavioral change._
+- [autowiring.md](autowiring.md) — how `ModernDIPlugin` registers
+  `autowired_groups` providers as Litestar dependencies by name.
 
 ## Promotion rule
 
