@@ -33,6 +33,21 @@ async def _lifespan_manager(app_: litestar.Litestar) -> typing.AsyncIterator[Non
         yield
 
 
+def _autowired_dependencies(groups: list[type[Group]], *, existing: typing.Iterable[str] = ()) -> dict[str, Provide]:
+    result: dict[str, Provide] = {}
+    seen: set[str] = set(existing)
+    for group in groups:
+        for name, provider in group.get_named_providers().items():
+            if name in seen:
+                warnings.warn(
+                    f"Duplicate dependency name '{name}' from group {group.__name__!r}; overwriting.",
+                    stacklevel=2,
+                )
+            seen.add(name)
+            result[name] = FromDI(provider)
+    return result
+
+
 class ModernDIPlugin(InitPlugin):
     __slots__ = ("container", "groups")
 
@@ -44,18 +59,7 @@ class ModernDIPlugin(InitPlugin):
         self.container.providers_registry.add_providers(litestar_request_provider, litestar_websocket_provider)
         app_config.state.di_container = self.container
         app_config.dependencies["di_container"] = Provide(build_di_container)
-        for group in self.groups:
-            name_by_provider_id = {
-                id(v): k for k, v in group.__dict__.items() if isinstance(v, providers.AbstractProvider)
-            }
-            for provider in group.get_providers():
-                name = name_by_provider_id[id(provider)]
-                if name in app_config.dependencies:
-                    warnings.warn(
-                        f"Duplicate dependency name '{name}' from group {group.__name__!r}; overwriting.",
-                        stacklevel=2,
-                    )
-                app_config.dependencies[name] = FromDI(provider)
+        app_config.dependencies.update(_autowired_dependencies(self.groups, existing=app_config.dependencies))
         app_config.lifespan.append(_lifespan_manager)
         return app_config
 
