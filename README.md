@@ -1,4 +1,10 @@
-# modern-di-litestar
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)"  srcset="https://raw.githubusercontent.com/modern-python/.github/main/brand/projects/modern-di-litestar/lockup-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/modern-python/.github/main/brand/projects/modern-di-litestar/lockup-light.svg">
+    <img alt="modern-di-litestar" src="https://raw.githubusercontent.com/modern-python/.github/main/brand/projects/modern-di-litestar/lockup.png" width="420">
+  </picture>
+</p>
 
 [![PyPI version](https://img.shields.io/pypi/v/modern-di-litestar.svg)](https://pypi.org/project/modern-di-litestar/)
 [![Supported Python versions](https://img.shields.io/pypi/pyversions/modern-di-litestar.svg)](https://pypi.org/project/modern-di-litestar/)
