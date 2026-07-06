@@ -61,7 +61,7 @@ from modern_di_litestar import ModernDIPlugin
 groups = [AppDependencies]
 
 app = litestar.Litestar(
-    plugins=[ModernDIPlugin(Container(groups=groups), autowired_groups=groups)],
+    plugins=[ModernDIPlugin(Container(groups=groups, validate=True), autowired_groups=groups)],
 )
 ```
 

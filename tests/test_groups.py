@@ -19,7 +19,9 @@ def _make_app(*groups: type[Group]) -> litestar.Litestar:
     all_groups = [Dependencies, *groups]
     return litestar.Litestar(
         debug=True,
-        plugins=[modern_di_litestar.ModernDIPlugin(Container(groups=all_groups), autowired_groups=all_groups)],
+        plugins=[
+            modern_di_litestar.ModernDIPlugin(Container(groups=all_groups, validate=True), autowired_groups=all_groups)
+        ],
     )
 
 
@@ -56,11 +58,10 @@ def test_autowiring_resolves_inherited_provider() -> None:
     class ChildGroup(BaseGroup): ...
 
     groups = [ChildGroup]
+    di_container = Container(groups=groups, validate=True)  # ty: ignore
     app = litestar.Litestar(
         debug=True,
-        plugins=[
-            modern_di_litestar.ModernDIPlugin(Container(groups=groups), autowired_groups=groups)  # ty: ignore
-        ],
+        plugins=[modern_di_litestar.ModernDIPlugin(di_container, autowired_groups=groups)],  # ty: ignore
     )
 
     @litestar.get("/")
