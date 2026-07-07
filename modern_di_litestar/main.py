@@ -62,7 +62,7 @@ class ModernDIPlugin(InitPlugin):
         self.groups = autowired_groups or []
 
     def on_app_init(self, app_config: AppConfig) -> AppConfig:
-        self.container.providers_registry.add_providers(*_CONNECTION_PROVIDERS)
+        self.container.add_providers(*_CONNECTION_PROVIDERS)
         app_config.state.di_container = self.container
         app_config.dependencies["di_container"] = Provide(build_di_container)
         app_config.dependencies.update(_autowired_dependencies(self.groups, existing=app_config.dependencies))
@@ -91,10 +91,8 @@ async def build_di_container(
 class _Dependency(typing.Generic[T_co]):
     dependency: providers.AbstractProvider[T_co] | type[T_co]
 
-    async def __call__(self, di_container: NamedDependency[SkipValidation[Container]]) -> T_co | None:
-        if isinstance(self.dependency, providers.AbstractProvider):
-            return di_container.resolve_provider(self.dependency)
-        return di_container.resolve(dependency_type=self.dependency)
+    async def __call__(self, di_container: NamedDependency[SkipValidation[Container]]) -> T_co:
+        return di_container.resolve_dependency(self.dependency)
 
 
 def FromDI(dependency: providers.AbstractProvider[T_co] | type[T_co]) -> Provide:  # noqa: N802
