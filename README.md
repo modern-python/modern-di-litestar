@@ -19,6 +19,8 @@
 
 [Modern-DI](https://github.com/modern-python/modern-di) integration for [Litestar](https://litestar.dev).
 
+Full guide: [Litestar integration docs](https://modern-di.modern-python.org/integrations/litestar/)
+
 Usage example: [litestar-sqlalchemy-template](https://github.com/modern-python/litestar-sqlalchemy-template)
 
 ## Installation
