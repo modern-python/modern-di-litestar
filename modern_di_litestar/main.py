@@ -83,11 +83,11 @@ async def build_di_container(
 
 @dataclasses.dataclass(slots=True, frozen=True)
 class _Dependency(typing.Generic[T_co]):
-    dependency: providers.AbstractProvider[T_co] | type[T_co]
+    marker: integrations.Marker[T_co]
 
     async def __call__(self, di_container: NamedDependency[SkipValidation[Container]]) -> T_co:
-        return di_container.resolve_dependency(self.dependency)
+        return self.marker.resolve(di_container)
 
 
 def FromDI(dependency: providers.AbstractProvider[T_co] | type[T_co]) -> Provide:  # noqa: N802
-    return Provide(dependency=_Dependency(dependency), use_cache=False)
+    return Provide(dependency=_Dependency(integrations.Marker(dependency)), use_cache=False)
