@@ -8,7 +8,7 @@ from litestar.config.app import AppConfig
 from litestar.di import NamedDependency, Provide
 from litestar.params import SkipValidation
 from litestar.plugins import InitPlugin
-from modern_di import Container, Group, Scope, providers
+from modern_di import Container, Group, Scope, integrations, providers
 
 
 T_co = typing.TypeVar("T_co", covariant=True)
@@ -73,27 +73,21 @@ class ModernDIPlugin(InitPlugin):
 async def build_di_container(
     request: litestar.Request[typing.Any, typing.Any, typing.Any],
 ) -> typing.AsyncIterator[Container]:
-    context: dict[type[typing.Any], typing.Any] = {}
-    scope = None
-    for provider in _CONNECTION_PROVIDERS:
-        if isinstance(request, provider.context_type):
-            context[provider.context_type] = request
-            scope = provider.scope
-            break
-    container = fetch_di_container(request.app).build_child_container(context=context, scope=scope)
-    try:
+    match = integrations.classify_connection(request, _CONNECTION_PROVIDERS)
+    async with fetch_di_container(request.app).build_child_container(
+        scope=match.scope if match else None,
+        context=match.context if match else None,
+    ) as container:
         yield container
-    finally:
-        await container.close_async()
 
 
 @dataclasses.dataclass(slots=True, frozen=True)
 class _Dependency(typing.Generic[T_co]):
-    dependency: providers.AbstractProvider[T_co] | type[T_co]
+    marker: integrations.Marker[T_co]
 
     async def __call__(self, di_container: NamedDependency[SkipValidation[Container]]) -> T_co:
-        return di_container.resolve_dependency(self.dependency)
+        return self.marker.resolve(di_container)
 
 
 def FromDI(dependency: providers.AbstractProvider[T_co] | type[T_co]) -> Provide:  # noqa: N802
-    return Provide(dependency=_Dependency(dependency), use_cache=False)
+    return Provide(dependency=_Dependency(integrations.Marker(dependency)), use_cache=False)

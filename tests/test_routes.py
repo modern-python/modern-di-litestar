@@ -1,7 +1,7 @@
 import litestar
 from litestar import status_codes
 from litestar.testing import TestClient
-from modern_di import Container, Scope
+from modern_di import Container, Scope, integrations
 
 from modern_di_litestar import FromDI
 from modern_di_litestar.main import _Dependency
@@ -60,7 +60,7 @@ def test_factories_action_scope(client: TestClient[litestar.Litestar], app: lite
 async def test_from_di_dependency_resolves_provider_instance() -> None:
     async with Container(groups=[Dependencies], validate=True) as container:
         child = container.build_child_container(scope=Scope.REQUEST)
-        resolved = await _Dependency(Dependencies.app_factory)(child)
+        resolved = await _Dependency(integrations.Marker(Dependencies.app_factory))(child)
         assert isinstance(resolved, SimpleCreator)
         assert resolved.dep1 == "original"
 
@@ -68,5 +68,5 @@ async def test_from_di_dependency_resolves_provider_instance() -> None:
 async def test_from_di_dependency_resolves_by_type() -> None:
     async with Container(groups=[Dependencies], validate=True) as container:
         child = container.build_child_container(scope=Scope.REQUEST)
-        resolved = await _Dependency(SimpleCreator)(child)
+        resolved = await _Dependency(integrations.Marker(SimpleCreator))(child)
         assert isinstance(resolved, SimpleCreator)
