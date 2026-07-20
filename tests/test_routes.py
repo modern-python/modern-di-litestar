@@ -46,9 +46,9 @@ def test_context_provider(client: TestClient[litestar.Litestar], app: litestar.L
 def test_factories_action_scope(client: TestClient[litestar.Litestar], app: litestar.Litestar) -> None:
     @litestar.get("/")
     async def read_root(di_container: Container) -> None:
-        action_container = di_container.build_child_container()
-        action_factory_instance = action_container.resolve_provider(Dependencies.action_factory)
-        assert isinstance(action_factory_instance, DependentCreator)
+        with di_container.build_child_container() as action_container:
+            action_factory_instance = action_container.resolve_provider(Dependencies.action_factory)
+            assert isinstance(action_factory_instance, DependentCreator)
 
     app.register(read_root)
 
@@ -59,14 +59,14 @@ def test_factories_action_scope(client: TestClient[litestar.Litestar], app: lite
 
 async def test_from_di_dependency_resolves_provider_instance() -> None:
     async with Container(groups=[Dependencies], validate=True) as container:
-        child = container.build_child_container(scope=Scope.REQUEST)
-        resolved = await _Dependency(integrations.Marker(Dependencies.app_factory))(child)
-        assert isinstance(resolved, SimpleCreator)
-        assert resolved.dep1 == "original"
+        with container.build_child_container(scope=Scope.REQUEST) as child:
+            resolved = await _Dependency(integrations.Marker(Dependencies.app_factory))(child)
+            assert isinstance(resolved, SimpleCreator)
+            assert resolved.dep1 == "original"
 
 
 async def test_from_di_dependency_resolves_by_type() -> None:
     async with Container(groups=[Dependencies], validate=True) as container:
-        child = container.build_child_container(scope=Scope.REQUEST)
-        resolved = await _Dependency(integrations.Marker(SimpleCreator))(child)
-        assert isinstance(resolved, SimpleCreator)
+        with container.build_child_container(scope=Scope.REQUEST) as child:
+            resolved = await _Dependency(integrations.Marker(SimpleCreator))(child)
+            assert isinstance(resolved, SimpleCreator)
