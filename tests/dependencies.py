@@ -29,7 +29,7 @@ class Dependencies(Group):
     app_factory = providers.Factory(creator=SimpleCreator, kwargs={"dep1": "original"})
     session_factory = providers.Factory(scope=Scope.SESSION, creator=DependentCreator, bound_type=None)
     request_factory = providers.Factory(
-        scope=Scope.REQUEST, creator=DependentCreator, cache_settings=providers.CacheSettings(), bound_type=None
+        scope=Scope.REQUEST, creator=DependentCreator, cache=providers.CacheSettings(), bound_type=None
     )
     action_factory = providers.Factory(scope=Scope.ACTION, creator=DependentCreator, bound_type=None)
     request_method = providers.Factory(scope=Scope.REQUEST, creator=fetch_method_from_request, bound_type=None)
