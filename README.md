@@ -76,12 +76,12 @@ Passing `autowired_groups` to `ModernDIPlugin` auto-registers each provider as a
 ```python
 from modern_di_litestar import FromDI
 
+
 @litestar.get(
     "/users",
     dependencies={"repo": FromDI(AppDependencies.user_repo)},
 )
-async def list_users(repo: UserRepository) -> list[str]:
-    ...
+async def list_users(repo: UserRepository) -> list[str]: ...
 ```
 
 `FromDI` accepts either a provider instance (`AppDependencies.user_repo`) or a type (`UserRepository`).
@@ -92,14 +92,14 @@ When `autowired_groups` is passed to `ModernDIPlugin`, provider names become ava
 
 ```python
 @litestar.get("/users")
-async def list_users(user_repo: UserRepository) -> list[str]:
-    ...
+async def list_users(user_repo: UserRepository) -> list[str]: ...
 ```
 
 ### 4. Access the raw request or websocket via DI
 
 ```python
 from modern_di_litestar import litestar_request_provider, litestar_websocket_provider
+
 
 class AppDependencies(Group):
     ...
