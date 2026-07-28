@@ -62,9 +62,11 @@ from modern_di_litestar import ModernDIPlugin
 
 groups = [AppDependencies]
 
+container = Container(groups=groups)
 app = litestar.Litestar(
-    plugins=[ModernDIPlugin(Container(groups=groups, validate=True), autowired_groups=groups)],
+    plugins=[ModernDIPlugin(container, autowired_groups=groups)],
 )
+container.validate()  # optional fail-fast; the plugin has registered its providers by now
 ```
 
 Passing `autowired_groups` to `ModernDIPlugin` auto-registers each provider as a Litestar dependency keyed by its attribute name (`database`, `user_repo`), so routes can declare them directly as parameters.

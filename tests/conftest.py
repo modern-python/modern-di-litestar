@@ -12,7 +12,7 @@ from tests.dependencies import Dependencies
 @pytest.fixture
 async def app() -> litestar.Litestar:
     return litestar.Litestar(
-        debug=True, plugins=[modern_di_litestar.ModernDIPlugin(Container(groups=[Dependencies], validate=True))]
+        debug=True, plugins=[modern_di_litestar.ModernDIPlugin(Container(groups=[Dependencies]))]
     )
 
 
