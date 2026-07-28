@@ -19,9 +19,7 @@ def _make_app(*groups: type[Group]) -> litestar.Litestar:
     all_groups = [Dependencies, *groups]
     return litestar.Litestar(
         debug=True,
-        plugins=[
-            modern_di_litestar.ModernDIPlugin(Container(groups=all_groups), autowired_groups=all_groups)
-        ],
+        plugins=[modern_di_litestar.ModernDIPlugin(Container(groups=all_groups), autowired_groups=all_groups)],
     )
 
 
