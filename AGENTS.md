@@ -1,10 +1,10 @@
-# CLAUDE.md
+# AGENTS.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Commands
 
-`just --list` (or read the `Justfile`) is the source of truth for recipes; all run via `uv`. Do not call `pytest`/`ruff` directly — use `just`.
+`just --list` (or read the `justfile`) is the source of truth for recipes; all run via `uv`. Do not call `pytest`/`ruff` directly — use `just`.
 
 - `just test [args]` runs pytest **without** coverage; extra args pass through (e.g. `just test tests/test_routes.py -k test_name`).
 - The 100% coverage gate lives in `just test-ci` (line) and `just test-branch` (branch) — not in `just test`.
