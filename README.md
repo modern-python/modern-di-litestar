@@ -69,7 +69,7 @@ app = litestar.Litestar(
 container.validate()  # optional fail-fast; the plugin has registered its providers by now
 ```
 
-Passing `autowired_groups` to `ModernDIPlugin` auto-registers each provider as a Litestar dependency keyed by its attribute name (`database`, `user_repo`), so routes can declare them directly as parameters.
+Passing `autowired_groups` to `ModernDIPlugin` autowires each provider as a Litestar dependency keyed by its attribute name (`database`, `user_repo`), so routes can declare them directly as parameters.
 
 ### 3. Inject into routes
 
@@ -88,7 +88,7 @@ async def list_users(repo: UserRepository) -> list[str]: ...
 
 `FromDI` accepts either a provider instance (`AppDependencies.user_repo`) or a type (`UserRepository`).
 
-**Using auto-wired group names (implicit)**
+**Using autowired group names (implicit)**
 
 When `autowired_groups` is passed to `ModernDIPlugin`, provider names become available as route parameters directly:
 
@@ -125,7 +125,7 @@ async def handler(di_container: Container) -> None:
     result = action_container.resolve_provider(AppDependencies.some_action_scoped_factory)
 ```
 
-### 6. Retrieve the app-level container
+### 6. Retrieve the root container
 
 ```python
 from modern_di_litestar import fetch_di_container
