@@ -146,7 +146,7 @@ container = fetch_di_container(app)
 
 ## 📦 [PyPI](https://pypi.org/project/modern-di-litestar)
 
-## 📝 [License](LICENSE)
+## 📝 [License](https://github.com/modern-python/modern-di-litestar/blob/main/LICENSE)
 
 ## Part of `modern-python`
 
