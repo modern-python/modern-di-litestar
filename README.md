@@ -81,12 +81,12 @@ from modern_di_litestar import FromDI
 
 @litestar.get(
     "/users",
-    dependencies={"repo": FromDI(AppDependencies.user_repo)},
+    dependencies={"repo": FromDI(UserRepository)},
 )
 async def list_users(repo: UserRepository) -> list[str]: ...
 ```
 
-`FromDI` accepts either a provider instance (`AppDependencies.user_repo`) or a type (`UserRepository`).
+`FromDI` accepts a type (`UserRepository`) or a provider instance (`AppDependencies.user_repo`). Pass a provider instance only for providers outside `autowired_groups`: Litestar rejects one provider registered under two keys and raises `ImproperlyConfiguredException`.
 
 #### Implicit, by autowired provider name
 
