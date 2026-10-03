@@ -50,7 +50,7 @@ class UserRepository:
 
 class AppDependencies(Group):
     database = providers.Factory(creator=Database, kwargs={"url": "sqlite:///app.db"})
-    user_repo = providers.Factory(scope=Scope.REQUEST, creator=UserRepository, bound_type=None)
+    user_repo = providers.Factory(scope=Scope.REQUEST, creator=UserRepository)
 ```
 
 ### 2. Wire the plugin
@@ -73,7 +73,7 @@ Passing `autowired_groups` to `ModernDIPlugin` autowires each provider as a Lite
 
 ### 3. Inject into routes
 
-**Using `FromDI` (explicit, per-route)**
+#### Explicit, per route with `FromDI`
 
 ```python
 from modern_di_litestar import FromDI
@@ -88,7 +88,7 @@ async def list_users(repo: UserRepository) -> list[str]: ...
 
 `FromDI` accepts either a provider instance (`AppDependencies.user_repo`) or a type (`UserRepository`).
 
-**Using autowired group names (implicit)**
+#### Implicit, by autowired provider name
 
 When `autowired_groups` is passed to `ModernDIPlugin`, provider names become available as route parameters directly:
 
@@ -100,14 +100,15 @@ async def list_users(user_repo: UserRepository) -> list[str]: ...
 ### 4. Access the raw request or websocket via DI
 
 ```python
-from modern_di_litestar import litestar_request_provider, litestar_websocket_provider
+def request_method(request: litestar.Request) -> str:
+    return request.method
 
 
 class AppDependencies(Group):
     ...
     request_method = providers.Factory(
         scope=Scope.REQUEST,
-        creator=lambda request: request.method,
+        creator=request_method,
         bound_type=None,
     )
 ```
@@ -116,13 +117,13 @@ class AppDependencies(Group):
 
 ### 5. Sub-request (action) scopes
 
-For work that should live shorter than a request, build a child container inside a route:
+The plugin registers a `di_container` dependency that yields the per-connection child container (`REQUEST` scope for HTTP, `SESSION` scope for WebSocket). For work that should live shorter than a request, build a child container from it inside a route:
 
 ```python
 @litestar.get("/")
 async def handler(di_container: Container) -> None:
-    action_container = di_container.build_child_container()
-    result = action_container.resolve_provider(AppDependencies.some_action_scoped_factory)
+    async with di_container.build_child_container() as action_container:
+        result = action_container.resolve_provider(AppDependencies.some_action_scoped_factory)
 ```
 
 ### 6. Retrieve the root container
@@ -137,12 +138,11 @@ container = fetch_di_container(app)
 
 | Symbol | Description |
 |---|---|
-| `ModernDIPlugin(container, autowired_groups=None)` | Litestar `InitPlugin` — wires the DI container into app lifecycle |
-| `FromDI(provider)` | Returns a Litestar `Provide` that resolves a provider per request |
-| `litestar_request_provider` | `ContextProvider` for the current `litestar.Request` |
-| `litestar_websocket_provider` | `ContextProvider` for the current `litestar.WebSocket` |
+| `ModernDIPlugin(container, autowired_groups=None)` | Litestar `InitPlugin` that wires the DI container into the app lifecycle |
+| `FromDI(dependency)` | Returns a Litestar `Provide` that resolves a provider (or type) per connection |
+| `litestar_request_provider` | `ContextProvider` for the current `litestar.Request` (`REQUEST` scope) |
+| `litestar_websocket_provider` | `ContextProvider` for the current `litestar.WebSocket` (`SESSION` scope) |
 | `fetch_di_container(app)` | Retrieves the root container from `app.state` |
-| `build_di_container` | Litestar dependency (registered as `di_container`) — yields a scoped child container per request |
 
 ## 📦 [PyPI](https://pypi.org/project/modern-di-litestar)
 
@@ -150,7 +150,7 @@ container = fetch_di_container(app)
 
 ## Part of `modern-python`
 
-Built on [`modern-di`](https://github.com/modern-python/modern-di), a dependency-injection framework with IoC container and scopes.
+Built on [`modern-di`](https://github.com/modern-python/modern-di), a dependency-injection framework with an IoC container and scopes.
 
 Browse the full list of templates and libraries in
-[`modern-python`](https://github.com/modern-python) — see the org profile for the categorized index.
+[`modern-python`](https://github.com/modern-python); the org profile has the categorized index.
