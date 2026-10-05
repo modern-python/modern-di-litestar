@@ -1,5 +1,4 @@
 import dataclasses
-import typing
 
 import litestar
 from modern_di import Group, Scope, providers
@@ -15,13 +14,11 @@ class DependentCreator:
     dep1: SimpleCreator
 
 
-def fetch_method_from_request(request: litestar.Request[typing.Any, typing.Any, typing.Any] | None = None) -> str:
-    assert isinstance(request, litestar.Request)
+def fetch_method_from_request(request: litestar.Request) -> str:
     return request.method
 
 
-def fetch_url_from_websocket(websocket: litestar.WebSocket[typing.Any, typing.Any, typing.Any] | None = None) -> str:
-    assert isinstance(websocket, litestar.WebSocket)
+def fetch_url_from_websocket(websocket: litestar.WebSocket) -> str:
     return websocket.url.path
 
 
