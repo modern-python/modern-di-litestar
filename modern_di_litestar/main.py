@@ -1,3 +1,4 @@
+import collections.abc
 import contextlib
 import dataclasses
 import typing
@@ -29,7 +30,7 @@ def fetch_di_container(app_: litestar.Litestar) -> Container:
 
 
 @contextlib.asynccontextmanager
-async def _lifespan_manager(app_: litestar.Litestar) -> typing.AsyncIterator[None]:
+async def _lifespan_manager(app_: litestar.Litestar) -> collections.abc.AsyncGenerator[None]:
     # ``async with`` reopens the root container on each startup (``__aenter__``)
     # and closes it on shutdown, so a second lifespan cycle against the same
     # container works instead of raising ContainerClosedError.
