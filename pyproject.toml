@@ -17,7 +17,7 @@ classifiers = [
     "Typing :: Typed",
     "Topic :: Software Development :: Libraries",
 ]
-dependencies = ["litestar>=2.23,<3", "modern-di>=3,<4"]
+dependencies = ["litestar>=2.23,<3", "modern-di>=4,<5"]
 version = "0"
 
 [project.urls]
