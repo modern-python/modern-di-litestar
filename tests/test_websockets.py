@@ -1,4 +1,5 @@
 import litestar
+from litestar.di import NamedDependency
 from litestar.testing import TestClient
 from modern_di import Container
 
@@ -16,8 +17,8 @@ async def test_factories(client: TestClient[litestar.Litestar], app: litestar.Li
     )
     async def websocket_handler(
         data: str,
-        app_factory_instance: SimpleCreator,
-        session_factory_instance: DependentCreator,
+        app_factory_instance: NamedDependency[SimpleCreator],
+        session_factory_instance: NamedDependency[DependentCreator],
     ) -> None:
         assert data == "test"
         assert isinstance(app_factory_instance, SimpleCreator)
@@ -32,7 +33,7 @@ async def test_factories(client: TestClient[litestar.Litestar], app: litestar.Li
 
 async def test_factories_request_scope(client: TestClient[litestar.Litestar], app: litestar.Litestar) -> None:
     @litestar.websocket_listener("/ws")
-    async def websocket_handler(data: str, di_container: Container) -> None:
+    async def websocket_handler(data: str, di_container: NamedDependency[Container]) -> None:
         assert data == "test"
         with di_container.build_child_container() as request_container:
             request_factory_instance = request_container.resolve_provider(Dependencies.request_factory)
@@ -46,7 +47,7 @@ async def test_factories_request_scope(client: TestClient[litestar.Litestar], ap
 
 async def test_context_adapter(client: TestClient[litestar.Litestar], app: litestar.Litestar) -> None:
     @litestar.websocket_listener("/ws", dependencies={"path": FromDI(Dependencies.websocket_path)})
-    async def websocket_handler(data: str, path: str) -> None:
+    async def websocket_handler(data: str, path: NamedDependency[str]) -> None:
         assert data == "test"
         assert path == "/ws"
 

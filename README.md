@@ -69,13 +69,17 @@ app = litestar.Litestar(
 container.validate()  # optional fail-fast; the plugin has registered its providers by now
 ```
 
-Passing `autowired_groups` to `ModernDIPlugin` autowires each provider as a Litestar dependency keyed by its attribute name (`database`, `user_repo`), so routes can declare them directly as parameters.
+Passing `autowired_groups` to `ModernDIPlugin` autowires each provider as a Litestar dependency keyed by its attribute name (`database`, `user_repo`), so a route receives one by declaring a parameter with that name.
 
 ### 3. Inject into routes
+
+Mark every injected parameter with `NamedDependency[...]` from `litestar.di`. Litestar 2.23 deprecated
+inferring a dependency from a plain annotation, and Litestar 3.0 removes it.
 
 #### Explicit, per route with `FromDI`
 
 ```python
+from litestar.di import NamedDependency
 from modern_di_litestar import FromDI
 
 
@@ -83,18 +87,18 @@ from modern_di_litestar import FromDI
     "/users",
     dependencies={"repo": FromDI(UserRepository)},
 )
-async def list_users(repo: UserRepository) -> list[str]: ...
+async def list_users(repo: NamedDependency[UserRepository]) -> list[str]: ...
 ```
 
 `FromDI` accepts a type (`UserRepository`) or a provider instance (`AppDependencies.user_repo`). Pass a provider instance only for providers outside `autowired_groups`: Litestar rejects one provider registered under two keys and raises `ImproperlyConfiguredException`.
 
 #### Implicit, by autowired provider name
 
-When `autowired_groups` is passed to `ModernDIPlugin`, provider names become available as route parameters directly:
+When `autowired_groups` is passed to `ModernDIPlugin`, a route receives a provider by naming a parameter after it:
 
 ```python
 @litestar.get("/users")
-async def list_users(user_repo: UserRepository) -> list[str]: ...
+async def list_users(user_repo: NamedDependency[UserRepository]) -> list[str]: ...
 ```
 
 ### 4. Access the raw request or websocket via DI
@@ -121,7 +125,7 @@ The plugin registers a `di_container` dependency that yields the per-connection 
 
 ```python
 @litestar.get("/")
-async def handler(di_container: Container) -> None:
+async def handler(di_container: NamedDependency[Container]) -> None:
     async with di_container.build_child_container() as action_container:
         result = action_container.resolve_provider(AppDependencies.some_action_scoped_factory)
 ```

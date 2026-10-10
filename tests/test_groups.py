@@ -2,7 +2,7 @@ import warnings
 
 import litestar
 from litestar import status_codes
-from litestar.di import Provide
+from litestar.di import NamedDependency, Provide
 from litestar.testing import TestClient
 from modern_di import Container, Group, Scope, providers
 
@@ -27,7 +27,9 @@ def test_group_autowiring() -> None:
     app = _make_app()
 
     @litestar.get("/")
-    async def read_root(app_factory: SimpleCreator, request_factory: DependentCreator) -> None:
+    async def read_root(
+        app_factory: NamedDependency[SimpleCreator], request_factory: NamedDependency[DependentCreator]
+    ) -> None:
         assert isinstance(app_factory, SimpleCreator)
         assert app_factory.dep1 == "original"
         assert isinstance(request_factory, DependentCreator)
@@ -71,7 +73,7 @@ def test_autowiring_resolves_inherited_provider() -> None:
     )
 
     @litestar.get("/")
-    async def read_root(inherited: SimpleCreator) -> None:
+    async def read_root(inherited: NamedDependency[SimpleCreator]) -> None:
         assert isinstance(inherited, SimpleCreator)
         assert inherited.dep1 == "inherited"
 
