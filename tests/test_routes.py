@@ -1,5 +1,6 @@
 import litestar
 from litestar import status_codes
+from litestar.di import NamedDependency
 from litestar.testing import TestClient
 from modern_di import Container, Scope, integrations
 
@@ -17,8 +18,8 @@ def test_factories(client: TestClient[litestar.Litestar], app: litestar.Litestar
         },
     )
     async def read_root(
-        app_factory_instance: SimpleCreator,
-        request_factory_instance: DependentCreator,
+        app_factory_instance: NamedDependency[SimpleCreator],
+        request_factory_instance: NamedDependency[DependentCreator],
     ) -> None:
         assert isinstance(app_factory_instance, SimpleCreator)
         assert isinstance(request_factory_instance, DependentCreator)
@@ -33,7 +34,7 @@ def test_factories(client: TestClient[litestar.Litestar], app: litestar.Litestar
 
 def test_context_provider(client: TestClient[litestar.Litestar], app: litestar.Litestar) -> None:
     @litestar.get("/", dependencies={"method": FromDI(Dependencies.request_method)})
-    async def read_root(method: str) -> None:
+    async def read_root(method: NamedDependency[str]) -> None:
         assert method == "GET"
 
     app.register(read_root)
@@ -45,7 +46,7 @@ def test_context_provider(client: TestClient[litestar.Litestar], app: litestar.L
 
 def test_factories_action_scope(client: TestClient[litestar.Litestar], app: litestar.Litestar) -> None:
     @litestar.get("/")
-    async def read_root(di_container: Container) -> None:
+    async def read_root(di_container: NamedDependency[Container]) -> None:
         with di_container.build_child_container() as action_container:
             action_factory_instance = action_container.resolve_provider(Dependencies.action_factory)
             assert isinstance(action_factory_instance, DependentCreator)

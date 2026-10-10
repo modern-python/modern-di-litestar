@@ -1,5 +1,6 @@
 import litestar
 from litestar import status_codes
+from litestar.di import NamedDependency
 from litestar.testing import TestClient
 
 from modern_di_litestar import FromDI, fetch_di_container
@@ -8,7 +9,7 @@ from tests.dependencies import Dependencies, SimpleCreator
 
 def test_lifespan_reopens_container_across_cycles(app: litestar.Litestar) -> None:
     @litestar.get("/", dependencies={"instance": FromDI(Dependencies.app_factory)})
-    async def read_root(instance: SimpleCreator) -> None:
+    async def read_root(instance: NamedDependency[SimpleCreator]) -> None:
         assert isinstance(instance, SimpleCreator)
 
     app.register(read_root)
