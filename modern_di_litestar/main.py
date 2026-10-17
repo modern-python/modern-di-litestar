@@ -33,12 +33,14 @@ def fetch_di_container(app_: litestar.Litestar) -> Container:
 
 
 @contextlib.asynccontextmanager
-async def _lifespan_manager(app_: litestar.Litestar) -> collections.abc.AsyncGenerator[None]:
-    # ``async with`` reopens the root container on each startup (``__aenter__``)
-    # and closes it on shutdown, so a second lifespan cycle against the same
-    # container works instead of raising ContainerClosedError.
-    async with fetch_di_container(app_):
-        yield
+async def _open_root(app_: litestar.Litestar) -> collections.abc.AsyncGenerator[None]:
+    fetch_di_container(app_).open()
+    # Closed by _close_root, an on_shutdown hook, which Litestar runs after every lifespan manager exits.
+    yield
+
+
+async def _close_root(app_: litestar.Litestar) -> None:
+    await fetch_di_container(app_).close_async()
 
 
 def _autowired_dependencies(groups: list[type[Group]], *, existing: typing.Iterable[str] = ()) -> dict[str, Provide]:
@@ -90,7 +92,8 @@ class ModernDIPlugin(InitPlugin):
         app_config.dependencies[_DI_CONTAINER_DEPENDENCY] = Provide(build_di_container)
         app_config.dependencies.update(_autowired_dependencies(self.groups, existing=app_config.dependencies))
         if self.manage_lifespan:
-            app_config.lifespan.append(_lifespan_manager)
+            app_config.lifespan.insert(0, _open_root)
+            app_config.on_shutdown.append(_close_root)
         return app_config
 
 
