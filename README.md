@@ -156,6 +156,10 @@ async with container:
 
 With the flag off the plugin still registers its providers and still builds and closes a child container for every request and websocket session. Only the root is left to you, and its `APP`-scoped finalizers run when your `async with` exits.
 
+### 8. Streaming responses
+
+Litestar runs dependency cleanup when the handler returns, before it sends the response, so the per-connection child container is already closed while a `Stream` or `ServerSentEvent` body runs. A REQUEST-scoped dependency injected with `FromDI`, such as a database session, has been finalized by then. To use REQUEST-scoped dependencies in the body, open a REQUEST child of the root container inside the generator, as the [streaming section of the guide](https://modern-di.modern-python.org/integrations/litestar/#streaming-responses) shows.
+
 ## API
 
 | Symbol | Description |
