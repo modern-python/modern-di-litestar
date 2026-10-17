@@ -1,8 +1,8 @@
 # No `Annotated`-marker injection path; `FromDI` returns Litestar's `Provide`
 
 Litestar binds handler parameters itself, so this package uses only the connection half of
-`modern_di.integrations` - `classify_connection`, which `build_di_container` uses to derive a child
-container's scope and context, and `Marker.resolve` inside `FromDI` - and ships no `@inject`
+`modern_di.integrations` (`classify_connection`, which `build_di_container` uses to derive a child
+container's scope and context, and `Marker.resolve` inside `FromDI`) and ships no `@inject`
 decorator, never calling `parse_markers` or `resolve_markers`. `FromDI` returns a real
 `litestar.di.Provide`, named in a handler's `dependencies={...}` or, with `autowired_groups`, bound
 by parameter name. A decorator would put a second signature scanner over the one Litestar already

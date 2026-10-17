@@ -6,13 +6,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 `modern-di-litestar` is a [Litestar](https://litestar.dev) integration for
 [`modern-di`](https://github.com/modern-python/modern-di); [`CONTEXT.md`](CONTEXT.md) opens with
-what it does and owns the vocabulary — read it before naming a concept in code, a test name, or an
+what it does and owns the vocabulary. Read it before naming a concept in code, a test name, or an
 issue title. It is one of that project's integrations, each of which lives in a separate repository
 and ships as a separate PyPI package.
 
 ## Commands
 
-`just` (task runner) and `uv` (package manager). The [`justfile`](justfile) is the source of truth —
+`just` (task runner) and `uv` (package manager). The [`justfile`](justfile) is the source of truth:
 `just --list`, or read it. Never invoke `pytest` or `ruff` directly.
 
 ## Architecture
