@@ -3,8 +3,10 @@ import warnings
 import litestar
 import pytest
 from litestar import status_codes
+from litestar.config.app import AppConfig
 from litestar.di import NamedDependency, Provide
 from litestar.exceptions import ImproperlyConfiguredException
+from litestar.plugins import InitPlugin
 from litestar.testing import TestClient
 from modern_di import Container, Group, Scope, providers
 
@@ -19,6 +21,12 @@ class OverlappingGroup(Group):
 
 class ReservedNameGroup(Group):
     di_container = providers.Factory(creator=SimpleCreator, kwargs={"dep1": "reserved"}, bound_type=None)
+
+
+class _UserDiContainerPlugin(InitPlugin):
+    def on_app_init(self, app_config: AppConfig) -> AppConfig:
+        app_config.dependencies["di_container"] = Provide(dict, sync_to_thread=False)
+        return app_config
 
 
 def _make_app(*groups: type[Group]) -> litestar.Litestar:
@@ -133,3 +141,18 @@ def test_autowired_name_di_container_is_rejected() -> None:
 
     assert "'di_container'" in exc_info.value.detail
     assert "reserved" in exc_info.value.detail
+
+
+def test_user_dependency_named_di_container_is_rejected() -> None:
+    with pytest.raises(ImproperlyConfiguredException, match="'di_container'") as exc_info:
+        litestar.Litestar(
+            dependencies={"di_container": Provide(dict, sync_to_thread=False)},
+            plugins=[modern_di_litestar.ModernDIPlugin(Container())],
+        )
+
+    assert "reserved by ModernDIPlugin" in exc_info.value.detail
+
+
+def test_earlier_plugin_dependency_named_di_container_is_rejected() -> None:
+    with pytest.raises(ImproperlyConfiguredException, match="reserved by ModernDIPlugin"):
+        litestar.Litestar(plugins=[_UserDiContainerPlugin(), modern_di_litestar.ModernDIPlugin(Container())])
