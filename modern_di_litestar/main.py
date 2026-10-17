@@ -72,6 +72,12 @@ class ModernDIPlugin(InitPlugin):
         self.groups = autowired_groups or []
 
     def on_app_init(self, app_config: AppConfig) -> AppConfig:
+        if _DI_CONTAINER_DEPENDENCY in app_config.dependencies:
+            msg = (
+                f"The app already has a dependency named {_DI_CONTAINER_DEPENDENCY!r}, "
+                "which is reserved by ModernDIPlugin for its own dependency; rename the dependency."
+            )
+            raise ImproperlyConfiguredException(msg)
         self.container.add_providers(*_CONNECTION_PROVIDERS)
         app_config.state.di_container = self.container
         app_config.dependencies[_DI_CONTAINER_DEPENDENCY] = Provide(build_di_container)
