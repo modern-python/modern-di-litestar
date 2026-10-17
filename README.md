@@ -69,7 +69,7 @@ app = litestar.Litestar(
 container.validate()  # optional fail-fast; the plugin has registered its providers by now
 ```
 
-Passing `autowired_groups` to `ModernDIPlugin` autowires each provider as a Litestar dependency keyed by its attribute name (`database`, `user_repo`), so a route receives one by declaring a parameter with that name.
+Passing `autowired_groups` to `ModernDIPlugin` autowires each provider as a Litestar dependency keyed by its attribute name (`database`, `user_repo`), so a route receives one by declaring a parameter with that name. The name `di_container` is reserved for the plugin's own dependency (section 5); a group that declares a provider under it raises `ImproperlyConfiguredException` when the app is created.
 
 ### 3. Inject into routes
 

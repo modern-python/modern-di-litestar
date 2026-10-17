@@ -7,12 +7,15 @@ import warnings
 import litestar
 from litestar.config.app import AppConfig
 from litestar.di import NamedDependency, Provide
+from litestar.exceptions import ImproperlyConfiguredException
 from litestar.params import SkipValidation
 from litestar.plugins import InitPlugin
 from modern_di import Container, Group, Scope, integrations, providers
 
 
 T_co = typing.TypeVar("T_co", covariant=True)
+
+_DI_CONTAINER_DEPENDENCY = "di_container"
 
 
 litestar_request_provider = providers.ContextProvider(scope=Scope.REQUEST, context_type=litestar.Request)
@@ -43,6 +46,12 @@ def _autowired_dependencies(groups: list[type[Group]], *, existing: typing.Itera
     seen: set[str] = set(existing)
     for group in groups:
         for name, provider in group.get_named_providers().items():
+            if name == _DI_CONTAINER_DEPENDENCY:
+                msg = (
+                    f"Group {group.__name__!r} declares a provider named {name!r}, "
+                    "which is reserved by ModernDIPlugin for its own dependency; rename the provider."
+                )
+                raise ImproperlyConfiguredException(msg)
             if name in seen:
                 # stacklevel=3: warn -> _autowired_dependencies -> on_app_init -> caller,
                 # matching the attribution of the original in-place warning in on_app_init.
@@ -65,7 +74,7 @@ class ModernDIPlugin(InitPlugin):
     def on_app_init(self, app_config: AppConfig) -> AppConfig:
         self.container.add_providers(*_CONNECTION_PROVIDERS)
         app_config.state.di_container = self.container
-        app_config.dependencies["di_container"] = Provide(build_di_container)
+        app_config.dependencies[_DI_CONTAINER_DEPENDENCY] = Provide(build_di_container)
         app_config.dependencies.update(_autowired_dependencies(self.groups, existing=app_config.dependencies))
         app_config.lifespan.append(_lifespan_manager)
         return app_config
