@@ -170,9 +170,10 @@ Litestar runs dependency cleanup when the handler returns, before it sends the r
 | `litestar_websocket_provider` | `ContextProvider` for the current `litestar.WebSocket` (`SESSION` scope) |
 | `fetch_di_container(app)` | Retrieves the root container from `app.state` |
 
-## 📦 [PyPI](https://pypi.org/project/modern-di-litestar)
+## Links
 
-## 📝 [License](https://github.com/modern-python/modern-di-litestar/blob/main/LICENSE)
+- [PyPI](https://pypi.org/project/modern-di-litestar)
+- [License](https://github.com/modern-python/modern-di-litestar/blob/main/LICENSE)
 
 ## Part of `modern-python`
 
