@@ -1,8 +1,10 @@
 import warnings
 
 import litestar
+import pytest
 from litestar import status_codes
 from litestar.di import NamedDependency, Provide
+from litestar.exceptions import ImproperlyConfiguredException
 from litestar.testing import TestClient
 from modern_di import Container, Group, Scope, providers
 
@@ -13,6 +15,10 @@ from tests.dependencies import Dependencies, DependentCreator, SimpleCreator
 
 class OverlappingGroup(Group):
     app_factory = providers.Factory(creator=SimpleCreator, kwargs={"dep1": "second"}, bound_type=None)
+
+
+class ReservedNameGroup(Group):
+    di_container = providers.Factory(creator=SimpleCreator, kwargs={"dep1": "reserved"}, bound_type=None)
 
 
 def _make_app(*groups: type[Group]) -> litestar.Litestar:
@@ -119,3 +125,11 @@ def test_autowired_dependencies_warns_on_existing_name_collision() -> None:
     collisions = [w for w in caught if issubclass(w.category, UserWarning) and "app_factory" in str(w.message)]
     assert len(collisions) == 1
     assert "Dependencies" in str(collisions[0].message)
+
+
+def test_autowired_name_di_container_is_rejected() -> None:
+    with pytest.raises(ImproperlyConfiguredException, match="ReservedNameGroup") as exc_info:
+        _make_app(ReservedNameGroup)
+
+    assert "'di_container'" in exc_info.value.detail
+    assert "reserved" in exc_info.value.detail
