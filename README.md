@@ -140,7 +140,9 @@ container = fetch_di_container(app)
 
 ### 7. Sharing a container
 
-By default the plugin opens the root container at startup and closes it at shutdown. When the container outlives the app, for example because several apps or a worker share it, pass `manage_lifespan=False` and open and close it yourself:
+By default the plugin opens the root container before any of your startup code runs and closes it after all of your shutdown code has run. Your `lifespan` context managers and your `on_startup` and `on_shutdown` hooks can all resolve `APP`-scoped dependencies, and the `APP`-scoped finalizers run last. The plugin puts its own manager first in `lifespan` and its own hook last in `on_shutdown`. This holds for code passed to `Litestar(...)` or added by an `on_app_init` handler or a plugin listed before `ModernDIPlugin`. A plugin listed after it can still add a manager ahead of it or a shutdown hook behind it.
+
+When the container outlives the app, for example because several apps or a worker share it, pass `manage_lifespan=False` and open and close it yourself:
 
 ```python
 container = Container(groups=groups)
