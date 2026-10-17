@@ -29,8 +29,9 @@ The class attribute a provider is declared under in its `Group`, including one i
 handler parameter must match and what collides between groups.
 
 **Root container**:
-The `Container` the plugin owns: attached to `app.state`, opened and closed by the Litestar
-lifespan, and the parent of every per-connection child. The concept is `modern-di`'s; local to this
+The `Container` passed to the plugin: attached to `app.state`, opened and closed by the Litestar
+lifespan unless `manage_lifespan=False` leaves that to the user, and the parent of every
+per-connection child. The concept is `modern-di`'s; local to this
 package is only where it lives.
 _Avoid_: app-level container — "app-level" reads as `Scope.APP` and blurs the container with the
 scope it happens to sit at.

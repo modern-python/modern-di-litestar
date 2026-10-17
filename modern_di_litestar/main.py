@@ -65,11 +65,18 @@ def _autowired_dependencies(groups: list[type[Group]], *, existing: typing.Itera
 
 
 class ModernDIPlugin(InitPlugin):
-    __slots__ = ("container", "groups")
+    __slots__ = ("container", "groups", "manage_lifespan")
 
-    def __init__(self, container: Container, autowired_groups: list[type[Group]] | None = None) -> None:
+    def __init__(
+        self,
+        container: Container,
+        autowired_groups: list[type[Group]] | None = None,
+        *,
+        manage_lifespan: bool = True,
+    ) -> None:
         self.container = container
         self.groups = autowired_groups or []
+        self.manage_lifespan = manage_lifespan
 
     def on_app_init(self, app_config: AppConfig) -> AppConfig:
         if _DI_CONTAINER_DEPENDENCY in app_config.dependencies:
@@ -82,7 +89,8 @@ class ModernDIPlugin(InitPlugin):
         app_config.state.di_container = self.container
         app_config.dependencies[_DI_CONTAINER_DEPENDENCY] = Provide(build_di_container)
         app_config.dependencies.update(_autowired_dependencies(self.groups, existing=app_config.dependencies))
-        app_config.lifespan.append(_lifespan_manager)
+        if self.manage_lifespan:
+            app_config.lifespan.append(_lifespan_manager)
         return app_config
 
 

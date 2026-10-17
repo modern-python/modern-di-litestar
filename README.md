@@ -138,11 +138,27 @@ from modern_di_litestar import fetch_di_container
 container = fetch_di_container(app)
 ```
 
+### 7. Sharing a container
+
+By default the plugin opens the root container at startup and closes it at shutdown. When the container outlives the app, for example because several apps or a worker share it, pass `manage_lifespan=False` and open and close it yourself:
+
+```python
+container = Container(groups=groups)
+app = litestar.Litestar(
+    plugins=[ModernDIPlugin(container, autowired_groups=groups, manage_lifespan=False)],
+)
+
+async with container:
+    ...  # run the app and anything else that shares the container
+```
+
+With the flag off the plugin still registers its providers and still builds and closes a child container for every request and websocket session. Only the root is left to you, and its `APP`-scoped finalizers run when your `async with` exits.
+
 ## API
 
 | Symbol | Description |
 |---|---|
-| `ModernDIPlugin(container, autowired_groups=None)` | Litestar `InitPlugin` that wires the DI container into the app lifecycle |
+| `ModernDIPlugin(container, autowired_groups=None, *, manage_lifespan=True)` | Litestar `InitPlugin` that wires the DI container into the app lifecycle. With `manage_lifespan=False` the app's lifespan leaves the root container alone and you open and close it yourself |
 | `FromDI(dependency)` | Returns a Litestar `Provide` that resolves a provider (or type) per connection |
 | `litestar_request_provider` | `ContextProvider` for the current `litestar.Request` (`REQUEST` scope) |
 | `litestar_websocket_provider` | `ContextProvider` for the current `litestar.WebSocket` (`SESSION` scope) |
