@@ -6,6 +6,7 @@ import warnings
 
 import litestar
 from litestar.config.app import AppConfig
+from litestar.connection import ASGIConnection
 from litestar.di import NamedDependency, Provide
 from litestar.exceptions import ImproperlyConfiguredException
 from litestar.params import SkipValidation
@@ -98,7 +99,7 @@ class ModernDIPlugin(InitPlugin):
 
 
 async def build_di_container(
-    request: litestar.Request[typing.Any, typing.Any, typing.Any],
+    request: ASGIConnection[typing.Any, typing.Any, typing.Any, typing.Any],
 ) -> typing.AsyncIterator[Container]:
     match = integrations.classify_connection(request, _CONNECTION_PROVIDERS)
     async with fetch_di_container(request.app).build_child_container(
