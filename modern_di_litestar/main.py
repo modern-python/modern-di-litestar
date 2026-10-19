@@ -1,9 +1,11 @@
 import collections.abc
 import contextlib
 import dataclasses
+import logging
 import typing
 import warnings
 
+import anyio
 import litestar
 from litestar.config.app import AppConfig
 from litestar.connection import ASGIConnection
@@ -27,6 +29,8 @@ litestar_websocket_provider = providers.ContextProvider(scope=Scope.SESSION, con
 # registers them and ``build_di_container`` dispatches off them. Add a connection
 # kind by adding its provider here — nothing else changes.
 _CONNECTION_PROVIDERS = (litestar_request_provider, litestar_websocket_provider)
+_CHILD_CLOSE_TIMEOUT = 10.0
+_logger = logging.getLogger(__name__)
 
 
 def fetch_di_container(app_: litestar.Litestar) -> Container:
@@ -102,11 +106,20 @@ async def build_di_container(
     request: ASGIConnection[typing.Any, typing.Any, typing.Any, typing.Any],
 ) -> typing.AsyncIterator[Container]:
     match = integrations.classify_connection(request, _CONNECTION_PROVIDERS)
-    async with fetch_di_container(request.app).build_child_container(
+    container = fetch_di_container(request.app).build_child_container(
         scope=match.scope if match else None,
         context=match.context if match else None,
-    ) as container:
+    )
+    try:
         yield container
+    finally:
+        with anyio.move_on_after(_CHILD_CLOSE_TIMEOUT, shield=True) as close_scope:
+            await container.close_async()
+        if close_scope.cancel_called:
+            _logger.warning(
+                "Closing the child container did not finish within %s s; its remaining finalizers did not run",
+                _CHILD_CLOSE_TIMEOUT,
+            )
 
 
 @dataclasses.dataclass(slots=True, frozen=True)
