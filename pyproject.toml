@@ -18,7 +18,12 @@ classifiers = [
     "Typing :: Typed",
     "Topic :: Software Development :: Libraries",
 ]
-dependencies = ["litestar>=2.23,<3", "modern-di>=4.2,<5", "anyio>=3.6.2,<5"]
+dependencies = [
+    "litestar>=2.23,<3",
+    "modern-di>=4.2,<5",
+    "anyio>=3.6.2,<5; python_version < '3.14'",
+    "anyio>=4.10,<5; python_version >= '3.14'",
+]
 version = "0"
 
 [project.urls]
